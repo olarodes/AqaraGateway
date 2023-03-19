@@ -11,6 +11,9 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM1,
     ENERGY_WATT_HOUR,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
@@ -60,6 +63,7 @@ OPT_DEBUG = {
 }
 
 OPT_DEVICE_NAME = {
+    'g2h pro': "Aqara Camera Hub G2H Pro",
     'g3': "Aqara Camera Hub G3",
     'g2h': "Aqara Camera Hub G2H",
     'h1': "Aqara Smart Hub H1",
@@ -72,7 +76,10 @@ OPT_DEVICE_NAME = {
 SIGMASTAR_MODELS = [
     'lumi.gateway.aqcn02',
     'lumi.camera.gwagl02',
-    'lumi.camera.gwpagl01'
+    'lumi.camera.gwag03',
+    'lumi.camera.gwpagl01',
+    'lumi.camera.agl001',
+    'lumi.gateway.acn004'
 ]
 
 REALTEK_MODELS = [
@@ -133,6 +140,9 @@ UNITS = {
     DEVICE_CLASS_PRESSURE: PRESSURE_HPA,
     DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
     DEVICE_CLASS_CO2: CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_PM25: 'µg/m³',
+    DEVICE_CLASS_PM10: 'µg/m³',
+    DEVICE_CLASS_PM1: 'µg/m³',
     'conductivity': CONDUCTIVITY,
     'consumption': ENERGY_KILO_WATT_HOUR,
     'gas density': '% LEL',
@@ -154,6 +164,9 @@ ICONS = {
     'moisture': 'mdi:water-percent',
     'smoke density': 'mdi:google-circles-communities',
     'carbon_dioxide': 'mdi:molecule-co2',
+    'pm25': "mdi:air-filter",
+    'pm10': "mdi:air-filter",
+    'pm1': "mdi:air-filter",
     'gateway': 'mdi:router-wireless',
     'zigbee': 'mdi:zigbee',
     'ble': 'mdi:bluetooth',
@@ -165,6 +178,7 @@ ICONS = {
     'hear_rate': 'mdi:heart-pulse',
     'breath_rate': 'mdi:lungs',
     'body_movements': 'mdi:page-layout-body',
+    'movements': 'mdi:page-layout-body'
 }
 
 # Binary_sensor
@@ -322,3 +336,16 @@ SWITCH_ATTRIBUTES = (
     'poweroff_memory',
     )
 
+# FP1
+APPROACHING_DISTANCE = 'approaching_distance'
+DETECTING_REGION = 'detecting_region'
+EXITS_ENTRANCES_REGION = 'exits_entrances_region'
+INTERFERENCE_REGION = 'interference_region'
+MONITORING_MODE = 'monitoring_mode'
+REVERTED_MODE = 'reverted_mode'
+ATTR_APPROACHING_DISTANCE = 'Approaching distance'
+ATTR_DETECTING_REGION = 'Detecting region'
+ATTR_EXITS_ENTRANCES_REGION = 'Exits/entrances region'
+ATTR_INTERFERENCE_REGION = 'Interference region'
+ATTR_MONITORING_MODE = 'Monitoring mode'
+ATTR_REVERTED_MODE = 'Reverted mode'

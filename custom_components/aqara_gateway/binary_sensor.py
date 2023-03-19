@@ -65,6 +65,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities([GatewaySmokeSensor(gateway, device, attr)])
         elif attr == 'motion':
             async_add_entities([GatewayMotionSensor(gateway, device, attr)])
+        elif attr == 'moisture':
+            async_add_entities([GatewaWaterLeakSensor(gateway, device, attr)])
         else:
             async_add_entities([GatewayBinarySensor(gateway, device, attr)])
 
@@ -182,9 +184,9 @@ class GatewayMotionSensor(GatewayBinarySensor):
         self._lqi = None
         self._voltage = None
         self._open_since = None
-        self.is_metric = True
-        if device['model'] in ('lumi.motion.agl02'):
-            self.is_metric = False
+        self.is_metric = False
+        #if device['model'] in ('lumi.motion.agl02', 'lumi.sensor_motion.aq2', 'lumi.motion.agl04'):
+        #    self.is_metric = False
         super().__init__(gateway, device, attr)
 
     async def async_added_to_hass(self):
@@ -396,6 +398,7 @@ class GatewaWaterLeakSensor(GatewayBinarySensor, BinarySensorEntity):
         self._voltage = None
         self._should_poll = False
         self._open_since = None
+        self.is_metric = False
         super().__init__(gateway, device, attr)
 
     @property
@@ -407,23 +410,22 @@ class GatewaWaterLeakSensor(GatewayBinarySensor, BinarySensorEntity):
             ATTR_LQI: self._lqi,
             ATTR_VOLTAGE: self._voltage,
         }
-        if self.has_since:
-            attrs[ATTR_OPEN_SINCE] = self._open_since
         return attrs
 
     def update(self, data: dict = None):
-        """ update door sensor """
+        """ update water leak sensor """
         self._should_poll = False
 
         for key, value in data.items():
             if key == BATTERY:
                 self._battery = value
             if key == CHIP_TEMPERATURE:
-                self._chip_temperature = format(
-                    (int(value) - 32) * 5 / 9, '.2f') if isinstance(
-                    value, (int, float)) else None
-            if key == NO_CLOSE:  # handle push from the hub
-                self._open_since = value
+                if self.is_metric:
+                    self._chip_temperature = format(
+                        (int(value) - 32) * 5 / 9, '.2f') if isinstance(
+                        value, (int, float)) else None
+                else:
+                    self._chip_temperature = value
             if key == LQI:
                 self._lqi = value
             if key == VOLTAGE:
@@ -431,8 +433,8 @@ class GatewaWaterLeakSensor(GatewayBinarySensor, BinarySensorEntity):
                     float(value) / 1000, '.3f') if isinstance(
                     value, (int, float)) else None
             if key == self._attr:
-                if self.device['model'] == 'lumi.flood.agl02':
-                    value = not value
+                # if self.device['model'] == 'lumi.flood.agl02':
+                #     value = not value
                 custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
                 if not custom.get(CONF_INVERT_STATE):
                     self._state = bool(value)
@@ -712,3 +714,4 @@ class GatewayAction(GatewayBinarySensor, BinarySensorEntity):
             self._state = ''
 
         self.schedule_update_ha_state()
+

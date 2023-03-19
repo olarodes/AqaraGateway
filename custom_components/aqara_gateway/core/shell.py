@@ -41,6 +41,7 @@ class TelnetShell(Telnet):
             self.read_until(b"Password: ", timeout=1)
             self.write(self._password.encode() + b"\n")
         self.run_command("stty -echo")
+        self.read_until(b"/ # ", timeout=10)
 
 #        self.run_command("export PS1='# '")
 
@@ -76,7 +77,6 @@ class TelnetShell(Telnet):
     def file_exist(self, filename: str) -> bool:
         """ check file exit """
         raw = self.run_command("ls -al {}".format(filename))
-        time.sleep(.1)
         if "No such" not in str(raw):
             return True
         return False
@@ -203,6 +203,7 @@ class TelnetShellG2H(TelnetShell):
             self.run_command(password)
 
         self.run_command("stty -echo")
+        self._suffix = "# "
 
 
 class TelnetShellE1(TelnetShell):
@@ -222,6 +223,7 @@ class TelnetShellE1(TelnetShell):
         self._suffix = "/ # "
 
         self.run_command("stty -echo")
+        self.read_until(b"/ # ", timeout=10)
 
 
 class TelnetShellG3(TelnetShell):
@@ -247,3 +249,6 @@ class TelnetShellG3(TelnetShell):
         self._suffix = "/ # "
         self.run_command("stty -echo")
 
+
+class TelnetShellG2HPro(TelnetShellG3):
+    pass

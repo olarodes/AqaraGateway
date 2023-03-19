@@ -12,10 +12,10 @@ from paho.mqtt.client import Client, MQTTMessage
 
 from homeassistant.core import Event
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
-from homeassistant.components.light import ATTR_HS_COLOR
+from homeassistant.components.light import ATTR_HS_COLOR, ATTR_RGB_COLOR, ATTR_BRIGHTNESS
 
 
-from .shell import TelnetShell, TelnetShellG2H, TelnetShellE1, TelnetShellG3
+from .shell import TelnetShell, TelnetShellG2H, TelnetShellE1, TelnetShellG3, TelnetShellG2HPro
 from .utils import DEVICES, Utils, GLOBAL_PROP
 from .const import CONF_MODEL, DOMAIN, SIGMASTAR_MODELS, REALTEK_MODELS, SUPPORTED_MODELS
 
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MD5_MOSQUITTO_ARMV7L = '0422c48517dc464a2e986a1038dc448a'
 MD5_MOSQUITTO_NEW_ARMV7L = '329fbbc41bad4df99760af6a9a6be150'
+MD5_MOSQUITTO_G2HPRO_ARMV7L = '9cd591ec76f85c4d96b744eb99943eb3'
 MD5_MOSQUITTO_MIPSEL = 'e0ce4757cfcccb079d89134381fd11b0'
 
 class Gateway(Thread):
@@ -177,7 +178,10 @@ class Gateway(Thread):
         """
         try:
             device_name = Utils.get_device_name(self._model).lower()
-            if "g2h" in device_name:
+            if "g2h pro" in device_name:
+                shell = TelnetShellG2HPro(self.host,
+                                       self.options.get(CONF_PASSWORD, ''))
+            elif "g2h" in device_name:
                 shell = TelnetShellG2H(self.host,
                                        self.options.get(CONF_PASSWORD, ''))
             elif "e1" in device_name:
@@ -227,13 +231,17 @@ class Gateway(Thread):
                 did = shell.get_prop("persist.sys.did")
                 model = shell.get_prop("ro.sys.model")
             elif any(name in model for name in [
-                    'lumi.gateway', 'lumi.aircondition', 'lumi.camera.gwpagl01']):
+                    'lumi.gateway', 'lumi.aircondition',
+                    'lumi.camera.gwpagl01', 'lumi.camera.agl001',
+                    'lumi.camera.acn003']):
                 raw = shell.read_file(
                     '/data/zigbee/coordinator.info', with_newline=False)
                 did = shell.get_prop("persist.sys.did")
                 model = shell.get_prop("ro.sys.model")
             else:
                 raw = str(shell.read_file('/mnt/config/miio/device.conf'))
+                if len(raw) <= 1:
+                    raw = str(shell.read_file('/mnt/config/miio/device.conf'))
                 data = re.search(r"did=([0-9]+).+", raw)
                 did = data.group(1) if data else ''
                 data = re.search(r"model=([a-zA-Z0-9.-]+).+", raw)
@@ -259,8 +267,10 @@ class Gateway(Thread):
             if len(zb_device) >= 1:
                 raw = shell.read_file(zb_device, with_newline=False)
             else:
-                raw = shell.read_file('{}/zigbee/device.info'.format(
-                    Utils.get_info_store_path(self._model)), with_newline=False)
+                device_info_path = '{}/zigbee/device.info'.format(Utils.get_info_store_path(self._model))
+                if not shell.file_exist(device_info_path):
+                    device_info_path = '/mnt/config/zigbee/device.info'
+                raw = shell.read_file(device_info_path)
 
             value = json.loads(raw)
             dev_info = value.get("devInfo", 'null') or []
@@ -389,7 +399,10 @@ class Gateway(Thread):
                                 ).strip().split(' '))
                         data.update(dict(zip(stat, stat)))
             device_name = Utils.get_device_name(self._model).lower()
-            if "g2h" in device_name:
+            if "g2h pro" in device_name:
+                shell = TelnetShellG2HPro(self.host,
+                                       self.options.get(CONF_PASSWORD, ''))
+            elif "g2h" in device_name:
                 shell = TelnetShellG2H(self.host,
                                        self.options.get(CONF_PASSWORD, ''))
             elif "e1" in device_name:
@@ -479,7 +492,10 @@ class Gateway(Thread):
 
         if prop == 'paring' and value == 0:
             device_name = Utils.get_device_name(self._model).lower()
-            if "g2h" in device_name:
+            if "g2h pro" in device_name:
+                shell = TelnetShellG2HPro(self.host,
+                                       self.options.get(CONF_PASSWORD, ''))
+            elif "g2h" in device_name:
                 shell = TelnetShellG2H(self.host,
                                        self.options.get(CONF_PASSWORD, ''))
             elif "e1" in device_name:
@@ -545,8 +561,11 @@ class Gateway(Thread):
             return
         elif data['cmd'] == 'behaved':
             return
+        elif data['cmd'] == 'control':
+            data['did'] = 'lumi.0'
+            pkey = 'control'
         else:
-            _LOGGER.warning("Unsupported cmd: %s", data)
+            _LOGGER.warning("Unsupported cmd: {}".format(data))
             return
 
         did = data['did']
@@ -577,6 +596,20 @@ class Gateway(Thread):
                         for handler in self.updates[self._gateway_did]:
                             handler(payload)
                         return
+            elif pkey in ('control'):
+                payload = {}
+                if data.get('type', '') == 'rgb' and data.get('from', '') != 'ha':
+                    brightness = int(max(data['data']['blue'], data['data']['green'], data['data']['red']) / 255 * 100)
+                    payload[ATTR_HS_COLOR] = hex(int(
+                        data['data']['blue'] + data['data']['green'] * 256 + data['data']['red'] * 65536))
+                    payload[ATTR_RGB_COLOR] = (data['data']['red'], data['data']['green'], data['data']['blue'])
+                    payload[ATTR_BRIGHTNESS] = brightness
+                    for handler in self.updates[self._gateway_did]:
+                        handler(payload)
+                elif data.get('from', '') != 'ha':
+                    _LOGGER.warning("Unsupported cmd: {}".format(data))
+                return
+
 
             self.process_gateway_stats(data[pkey])
 
@@ -747,6 +780,7 @@ class Gateway(Thread):
                                 ((hs_color >> 16) & 0xFF) * brightness / 100)},
                         'type': 'rgb',
                         'rev': 1,
+                        'from': 'ha',
                         'id': randint(0, 65535)
                     }
                 else:
@@ -754,6 +788,7 @@ class Gateway(Thread):
                         'cmd': 'control',
                         'data': data,
                         'rev': 1,
+                        'from': 'ha',
                         'id': randint(0, 65535)
                     }
                 payload = json.dumps(payload, separators=(',', ':')).encode()
@@ -768,9 +803,18 @@ def prepare_aqaragateway(shell, model):
     if model in SIGMASTAR_MODELS:
         command = "chattr -i /data/scripts"
         shell.run_command(command)
+    if model in SIGMASTAR_MODELS:
+        command = "asetprop persist.app.tty_enable true"
+    else:
+        command = "setprop persist.app.tty_enable true"
+    shell.write(command.encode() + b"\n")
+    if model in SIGMASTAR_MODELS:
+        command = "asetprop persist.app.debug_log true"
+    else:
+        command = "setprop persist.app.debug_log true"
+    shell.write(command.encode() + b"\n")
     command = "mkdir -p /data/scripts"
     shell.write(command.encode() + b"\n")
-    time.sleep(1)
     command = "echo -e '#!/bin/sh\r\n\r\nfw_manager.sh -r\r\n" \
         "fw_manager.sh -t -k' > /data/scripts/post_init.sh"
     shell.run_command(command)
@@ -778,8 +822,11 @@ def prepare_aqaragateway(shell, model):
     shell.run_command(command)
     command = "mkdir -p /data/bin"
     shell.write(command.encode() + b"\n")
-    time.sleep(1)
-    if model in SIGMASTAR_MODELS:
+    if model in ('lumi.camera.agl001'):
+        shell.check_bin('mosquitto', MD5_MOSQUITTO_G2HPRO_ARMV7L , 'bin/armv7l/mosquitto_g2hpro')
+        command = "chattr +i /data/scripts"
+        shell.run_command(command)
+    elif model in SIGMASTAR_MODELS:
         shell.check_bin('mosquitto', MD5_MOSQUITTO_NEW_ARMV7L , 'bin/armv7l/mosquitto_new')
         command = "chattr +i /data/scripts"
         shell.run_command(command)
@@ -798,7 +845,14 @@ def is_aqaragateway(host: str,
     if host:
         try:
             socket.inet_aton(host)
-            if device_name and 'g2h' in device_name:
+            if device_name and 'g2h pro' in device_name:
+                shell = TelnetShellG2HPro(host, password)
+                shell.login()
+                model = shell.get_prop("ro.sys.model")
+                name = shell.get_prop("ro.sys.name")
+                mac = shell.get_prop("persist.sys.miio_mac")
+                token = shell.get_token()
+            elif device_name and 'g2h' in device_name:
                 shell = TelnetShellG2H(host, password)
                 shell.login()
                 raw = str(shell.read_file('/etc/build.prop'))

@@ -17,7 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 from .const import DOMAIN, SIGMASTAR_MODELS
 
 SOFT_HACK_REALTEK = {"ssid": "\"\"", "pswd": "123123 ; passwd -d admin ; echo enable > /sys/class/tty/tty/enable; telnetd"}
-SOFT_HACK_SIGMASTAR = {"ssid": "\"\"", "pswd": "123123 ; /bin/riu_w 101e 53 3012 ; telnetd"}
+SOFT_HACK_SIGMASTAR = {"ssid": "\"\"", "pswd": "123123 ; passwd -d root ; /bin/riu_w 101e 53 3012 ; telnetd"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,10 @@ DEVICES = [{
     'lumi.gateway.sacn01': ["Aqara", "Smart Hub H1", "QBCZWG11LM"],
     'lumi.gateway.aqcn02': ["Aqara", "Hub E1", "ZHWG16LM"],  # tested
     'lumi.camera.gwagl02': ["Aqara", "Camera Hub G2H", "ZNSXJ12LM"],  # tested
+    'lumi.camera.gwag03': ["Aqara", "Camera Hub G2H", "CH-H01"],  # tested
     'lumi.camera.gwpagl01': ["Aqara", "Camera Hub G3", "ZNSXJ13LM"],  # tested
+    'lumi.camera.gwpgl1': ["Aqara", "Camera Hub G3", "CH-H03"],
+    'lumi.camera.agl001': ["Aqara", "Camera Hub G2H Pro", "ZNSXJ15LM"],
     'params': [
         ['8.0.2012', None, 'power_tx', None],
         ['8.0.2024', None, 'channel', None],
@@ -217,6 +220,26 @@ DEVICES = [{
         [None, None, 'switch', 'binary_sensor'],
     ]
 }, {
+    # with neutral wire
+    'lumi.controller.a4acn1': ["Aqara", "Smart Scene Panel Switch S1", "ZNCJMB14LM"],
+    'params': [
+        ['4.1.85', 'channel_0', 'channel 1', 'switch'],
+        ['4.2.85', 'channel_1', 'channel 2', 'switch'],
+        ['4.3.85', 'channel_2', 'channel 3', 'switch'],
+        ['4.14.85', None, 'auto_brightness', 'switch'],
+        ['4.23.85', None, 'mute', 'switch'],
+        ['4.46.85', None, 'screensaver', 'switch'],
+        ['8.0.2207', None, 'turn_off_light_as_time', 'sensor'],
+        ['13.1.85', None, 'button_1', None],
+        ['13.2.85', None, 'button_2', None],
+        ['13.3.85', None, 'button_3', None],
+        ['13.5.85', None, 'button_both_12', None],
+        ['13.6.85', None, 'button_both_13', None],
+        ['13.7.85', None, 'button_both_23', None],
+        [None, None, 'switch', 'binary_sensor'],
+        ['14.1.111', None, 'alarm_status', 'sensor']
+    ]
+}, {
     # cube action, no retain
     'lumi.sensor_cube': ["Aqara", "Cube", "MFKZQ01LM"],
     'lumi.sensor_cube.aqgl01': ["Aqara", "Cube", "MFKZQ01LM"],  # tested
@@ -262,6 +285,7 @@ DEVICES = [{
     'lumi.light.cwac02': ["Aqara", "Bulb T1", "ZNLDP13LM"],  # @Kris
     'lumi.light.acn014': ["Aqara", "Bulb T1", "ZNLDP14LM"],
     'lumi.light.acn015': ["Aqara", "Sun Light H1", "QKD01LM"],
+    'lumi.light.acn003': ["Aqara", "L1-350 Ceiling Light", "ZNXDD01LM"],
     'params': [
         ['4.1.85', 'power_status', 'light', 'light'],
         ['1.6.85', None, 'ms_to_turn_on', None],
@@ -308,12 +332,11 @@ DEVICES = [{
     'params': [
         ['1.10.85', None, 'present_mode', None],
         ['0.12.85', 'load_power', 'power', 'sensor'],
-        ['4.1.85', 'power_status', 'light', None],
+        ['4.1.85', 'power_status', 'light', 'light'],
         ['14.1.85', 'light_level', 'brightness', None],
         ['14.2.85', 'colour_temperature', 'color_temp', None],
-        ['14.8.85', 'rgb_color', 'rgb_color', None],
-        ['14.11.85', None, 'dual_color_temperature_mode', None],
-        [None, 'hs_color', 'hs_color', 'light'],
+        ['14.5.85', 'rgb_color', 'rgb_color', None],
+        ['14.46.85', None, 'dual_color_temperature_mode', None],
         ['8.0.2022', None, 'ambilight', None],
         ['8.0.2150', None, 'dynamic', None],
     ]
@@ -386,6 +409,17 @@ DEVICES = [{
         ['8.0.2001', 'battery', 'battery', 'sensor'],
     ]
 }, {
+    # temperature, humidity, PM2.5 and CO2 sensor
+    'lumi.airm.fhac01': ["Aqara", "Air Quality Monitor S1", "KQJCMB11LM"], # @justbin95
+    'params': [
+        ['0.1.85', 'temperature', 'temperature', 'sensor'],
+        ['0.2.85', 'humidity', 'humidity', 'sensor'],
+        ['0.6.85', None, 'carbon_dioxide', 'sensor'],
+        ['0.19.85', None, 'pm25', 'sensor'],
+        ['0.41.85', None, 'pm1', 'sensor'],
+        ['0.42.85', None, 'pm10', 'sensor'],
+    ]
+}, {
     # door window sensor
     'lumi.sensor_magnet': ["Xiaomi", "Door Sensor", "MCCGQ01LM"],
     'lumi.sensor_magnet.aq2': ["Aqara", "Door Sensor", "MCCGQ11LM"],
@@ -406,6 +440,7 @@ DEVICES = [{
 }, {
     # motion sensor with illuminance
     'lumi.sensor_motion.aq2': ["Aqara", "Motion Sensor", "RTCGQ11LM"],
+    'lumi.motion.ac02': ["Aqara", "Motion Sensor P1", "RTCGQ14LM"],
     'params': [
         ['0.3.85', 'lux', 'illuminance_lux', None],
         ['0.4.85', 'illumination', 'illuminance', 'sensor'],
@@ -415,10 +450,20 @@ DEVICES = [{
 }, {
     'lumi.motion.ac01': ["Aqara", "Presence Detector FP1", "RTCGQ12LM"],
     'params': [
-        ['3.51.85', None, 'motion', 'binary_sensor'],
-        ['13.27.85', None, 'motion', 'binary_sensor'],
-        ['8.0.2001', 'battery', 'battery', 'sensor'],
+        ['3.51.85', None, 'occupancy', 'binary_sensor'],
         ['8.0.2115', None, 'detect_interval', None],
+        ['4.1.85', None, 'monitoring_mode', None],
+        ['4.2.85', None, 'reverted_mode', None],
+        ['4.22.85', None, '4.22.85', None],
+        ['14.47.85', None, 'approaching_distance', None],
+        ['14.48.85', None, '14.48.85', None],
+        ['14.49.85', None, '14.49.85', None],
+        ['14.92.85', None, 'edge_region', None],
+        ['14.93.85', None, 'exits_entrances_region', None],
+        ['14.94.85', None, 'interference_region', None],
+        ['14.56.85', None, 'detecting_region', None],
+        ['13.21.85', None, 'occupancy_region', 'sensor'],
+        ['13.27.85', None, 'movements', 'sensor'],
     ]
 }, {
     # water leak sensor
@@ -470,7 +515,7 @@ DEVICES = [{
 }, {
     'lumi.curtain': ["Aqara", "Curtain", "ZNCLDJ11LM"],
     'lumi.curtain.aq2': ["Aqara", "Roller Shade", "ZNGZDJ11LM"],
-    'lumi.curtain.hagl07': ["Aqara", "Curtain C2", "ZNCLDJ11LM"],   # @darkbao
+    'lumi.curtain.hagl07': ["Aqara", "Curtain C2", "ZNCLDJ14LM"],   # @darkbao
     'lumi.curtain.vagl02': ["Aqara", "Curtain T1", "ZNGZDJ15LM"],
     'params': [
         ['1.1.85', 'curtain_level', 'position', None],
@@ -587,10 +632,75 @@ DEVICES = [{
         ['13.62.85', None, 'timestamp', None],
         ['13.69.85', 'temperature', 'li battery temperature', None],
         ['13.88.85', None, 'door', None],
+        ['4.8.85', None, 'camera connected', None],
+        [None, None, 'lock_event', 'sensor'],
+    ]
+}, {
+    'aqara.lock.eicn01': ["Aqara", "Door Lock A100", "ZNMS02ES"],
+    'aqara.lock.acn001': ["Aqara", "Door Lock A100", "ZNMS02ES"],
+    'params': [
+        ['8.0.2148', None, 'timestamp', None],
+        ['13.17.85', 'lock_state', 'lock', 'sensor'],
+        ['13.18.85', None, 'key_type', None],
+        ['13.31.85', None, 'lock_event', None],
+        ['13.32.85', None, 'verification failed', None],
+        ['13.33.85', None, 'latch_state', None],
+        ['13.41.85', None, 'unlock from inside', None],
+        ['13.42.85', None, 'unlock by fringprint', None],
+        ['13.43.85', None, 'unlock by password', None],
+        ['13.44.85', None, 'unlock by nfc', None],
+        ['13.45.85', None, 'unlock by homekit', None],
+        ['13.46.85', None, 'unlock by temporary password', None],
+        ['13.49.85', None, 'open in away mode', None],
+        ['13.54.85', None, 'away mode', None],
+        [None, None, 'key_id', 'sensor'],
+        ['13.55.85', 'voltage', 'voltage', None],
+        ['13.56.85', 'battery', 'battery', 'sensor'],
+        ['13.57.85', None, 'battery notify', None],
+        ['13.60.85', None, 'verification failed', None],
+        ['13.62.85', None, 'timestamp', None],
+        ['13.63.85', None, 'user added', None],
+        ['13.64.85', None, 'user removed', None],
+        ['13.65.85', None, 'all user removed', None],
+        ['13.66.85', None, 'nfc added', None],
+        ['13.67.85', None, 'nfc removed', None],
+        ['13.68.85', None, 'homekit reset', None],
+        ['13.88.85', None, 'door', None],
+        ['14.83.85', None, 'bluetooth', None],
+        [None, None, 'lock_event', 'sensor'],
+    ]
+}, {
+    'aqara.lock.acn004': ["Aqara", "Smart Door Lock D200", "ZNMS23LM"],
+    'params': [
+        ['13.17.85', None, 'lock', 'sensor'],
+        ['13.18.85', None, 'key_type', None],
+        ['13.31.85', None, 'lock_event', None],
+        ['13.33.85', None, 'latch_state', None],
+        ['13.37.85', None, 'verification failed', None],
+        ['13.43.85', None, 'unlock by password', None],
+        ['13.44.85', None, 'unlock by nfc', None],  # not tested
+        ['13.45.85', None, 'unlock by homekit', None],
+        ['13.46.85', None, 'unlock by temporary password', None],
+        ['13.51.85', None, 'unlock from inside', None],
+        ['13.53.85', None, 'unlock by face', None],
+        ['13.54.85', None, 'away mode', None],
+        [None, None, 'key_id', 'sensor'],
+        ['13.55.85', None, 'voltage', None],
+        ['13.56.85', None, 'battery', 'sensor'],
+        ['13.57.85', None, 'battery notify', None],
+        ['13.62.85', None, 'timestamp', None],
+        ['13.63.85', None, 'user added', None],
+        ['13.64.85', None, 'user removed', None],
+        ['13.65.85', None, 'all user removed', None],  # not tested
+        ['13.66.85', None, 'nfc added', None],  # not tested
+        ['13.67.85', None, 'nfc removed', None],  # not tested
+        ['13.68.85', None, 'homekit reset', None],  # not tested
+        ['13.88.85', None, 'door', None],
         [None, None, 'lock_event', 'sensor'],
     ]
 }, {
     'lumi.airrtc.tcpecn01': ["Aqara", "Thermostat S1", "KTWKQ02ES"],
+    'lumi.ctrl_hvac.es1': ["Aqara", "Thermostat", "KTWKQ01ES"],
     # https://github.com/AlexxIT/XiaomiGateway3/issues/101
     'lumi.airrtc.tcpecn02': ["Aqara", "Thermostat S2", "KTWKQ03ES"],
     'params': [
@@ -637,6 +747,7 @@ DEVICES = [{
     'params': [
         ['0.12.85', 'load_power', 'power', 'sensor'],
         ['0.13.85', None, 'consumption', 'sensor'],
+        ['13.1.85', None, 'button', None],
         ['0.24.85', 'rotate_angle', 'rotate_angle', None],
         ['0.25.85', 'action_duration', 'action_time', None],
         ['0.29.85', 'rotate_angle', 'rotate_angle', None],  # while hold
@@ -646,7 +757,6 @@ DEVICES = [{
         ['4.2.85', 'channel_1', 'channel 2', 'switch'],
         ['4.3.85', 'channel_2', 'channel 3', 'switch'],
         [None, None, 'switch', 'binary_sensor'],
-        ['8.0.2001', 'battery', 'battery', 'sensor'],
         ['13.8.85', None, 'mode', None],
         ['14.6.85', None, 'sensitivity', None],
         ['14.7.85', 'single_click_control_mode', 'mode', None],
@@ -686,6 +796,7 @@ DEVICES = [{
 DEVICES_AIOT = [{
     # with neutral wire
     'lumi.switch.n1acn1': ["Aqara", "Single Wall Switch H1 Pro", "QBKG30LM"],  # @Kris
+    'lumi.switch.acn029': ["Aqara", "Single Wall Switch H1M", "ZNQBKG24LM"],
     'params': [
         ['0.12.85', 'load_power', 'power', 'sensor'],
         ['0.13.85', None, 'consumption', 'sensor'],
@@ -697,6 +808,7 @@ DEVICES_AIOT = [{
     # with neutral wire
 #    'lumi.switch.b2laus01': ["Aqara", "Double Wall Switch US", "WS-USC02"],
     'lumi.switch.n2acn1': ["Aqara", "Double Wall Switch H1 Pro", "QBKG31LM"],  # @miniknife88
+    'lumi.switch.acn030': ["Aqara", "Double Wall Switch H1M", "ZNQBKG25LM"],
     'params': [
         ['4.1.85', 'channel_0', 'channel 1', 'switch'],
         ['4.2.85', 'channel_1', 'channel 2', 'switch'],
@@ -704,11 +816,13 @@ DEVICES_AIOT = [{
         ['13.2.85', None, 'button_2', None],
         ['13.5.85', None, 'button_both', None],
         [None, None, 'switch', 'binary_sensor'],
+        ['0.12.85', 'load_power', 'power', 'sensor'],
         ['0.13.85', None, 'consumption', 'sensor'], # @darkbao
     ]
 }, {
     # with neutral wire, thanks @Mantoui
     'lumi.switch.n3acn1': ["Aqara", "Triple Wall Switch H1 Pro", "QBKG32LM"],  # @Kris
+    'lumi.switch.acn031': ["Aqara", "Triple Wall Switch H1M", "ZNQBKG26LM"],
     'params': [
         ['0.12.85', 'load_power', 'power', 'sensor'],
         ['0.13.85', None, 'consumption', 'sensor'],
@@ -836,6 +950,7 @@ DEVICES_AIOT = [{
     # button switch, no retain
     'lumi.remote.b18ac1': ["Aqara", "Single Wall Button H1", "WXKG14LM"],
     'lumi.remote.acn003': ["Aqara", "Single Wall Button E1", "WXKG16LM"],
+    'lumi.remote.acn007': ["Aqara", "Button E1", "WXKG20LM"],
     'params': [
         ['13.1.85', None, 'button', None],
         [None, None, 'switch', 'binary_sensor'],
@@ -856,6 +971,21 @@ DEVICES_AIOT = [{
         ['8.0.2001', 'battery', 'battery', 'sensor'],
     ]
 }, {
+    # with neutral wire
+    'lumi.switch.acn040': ["Aqara", "Triple Wall Switch E1", "ZNQBKG31LM"],
+    'params': [
+        ['4.1.85', 'channel_0', 'channel 1', 'switch'],
+        ['4.2.85', 'channel_1', 'channel 2', 'switch'],
+        ['4.3.85', 'channel_2', 'channel 3', 'switch'],
+        ['13.1.85', None, 'button_1', None],
+        ['13.2.85', None, 'button_2', None],
+        ['13.3.85', None, 'button_3', None],
+        ['13.5.85', None, 'button_both_12', None],
+        ['13.6.85', None, 'button_both_13', None],
+        ['13.7.85', None, 'button_both_23', None],
+        [None, None, 'switch', 'binary_sensor'],
+    ]
+}, {
     # door window sensor
     'lumi.magnet.agl02': ["Aqara", "Door Sensor T1", "MCCGQ12LM"],  # @Kris
     'lumi.magnet.acn001': ["Aqara", "Door Sensor E1", "MCCGQ14LM"],
@@ -866,6 +996,7 @@ DEVICES_AIOT = [{
 }, {
     # motion sensor with illuminance
     'lumi.motion.agl02': ["Aqara", "Motion Sensor T1", "RTCGQ12LM"],  # @miniknife88
+    'lumi.motion.acn001': ["Aqara", "Motion Sensor E1", "RTCGO15LM"],
     'params': [
         ['0.3.85', 'lux', 'illuminance_lux', None],
         ['0.4.85', 'illumination', 'illuminance', 'sensor'],
@@ -918,9 +1049,12 @@ DEVICES_AIOT = [{
     ]
 }, {
     'lumi.curtain.acn002': ["Aqara", "Roller Shade E1", "ZNJLBL01LM"],
+    'lumi.curtain.acn003': ["Aqara", "Curtain Driver E1", "ZNJLBL01LM"],
+    'lumi.curtain.agl001': ["Aqara", "Curtain Driver E1", "ZNJLBL01LM"],
     'params': [
         ['0.1.85', None, 'working_time', None],
         ['1.1.85', 'curtain_level', 'position', None],
+        ['0.55.85', None, 'position', None],
         ['4.1.85', None, 'motor_stroke', None],
         ['4.2.85', None, 'polarity', None],
         ['13.1.85', None, 'charging_status', None],
@@ -930,6 +1064,7 @@ DEVICES_AIOT = [{
         ['14.8.85', None, 'motor', 'cover'],
         ['8.0.2001', 'battery', 'battery', 'sensor'],
         ['8.0.2041', None, 'model', None],
+        ['13.10.85', None, 'model', None]
     ]
 }, {
     # water leak sensor
@@ -937,6 +1072,26 @@ DEVICES_AIOT = [{
     'params': [
         ['3.1.85', 'alarm', 'moisture', 'binary_sensor'],
         ['8.0.2001', 'battery', 'battery', 'sensor'],
+    ]
+}, {
+    'lumi.airrtc.agl001': ["Aqara", "Smart Radiator Thermostat E1", ""],
+    'params': [
+        ['0.1.85', 'temperature', 'temperature', 'sensor'],
+        ['1.8.85', None, 'target_temperature', None],
+        ['14.51.85', None, 'mode', None],
+        ['4.21.85', 'switch', 'switch', 'switch'],
+        ['4.25.85', 'check_switch', 'switch', 'switch'],
+        ['4.26.85', 'child_lock_switch', 'switch', 'switch'],
+        ['8.0.2001', 'battery', 'battery', 'sensor']
+    ]
+}, {
+    'lumi.airer.acn001': ["Aqara", "Smart Clothes Drying Rack H1", ""],
+    'params': [
+        ['4.21.85', 'light', 'switch', 'switch'],
+        ['4.22.85', 'disinfect', 'switch', 'switch'],
+        ['4.66.85', 'hot_drying', 'switch', 'switch'],
+        ['4.67.85', 'drying', 'switch', 'switch'],
+        ['14.51.85', None, 'airer_control', 'cover'],
     ]
 }]
 
@@ -1094,6 +1249,14 @@ DEVICES_MIOT = [{
         ['2.1', None, 'button: 1', None],  # single
         ['2.2', None, 'button: 2', None],  # double
         ['2.3', None, 'button: 16', None],  # long
+        [None, None, 'switch', 'binary_sensor'],
+    ]
+}, {
+    'lumi.remote.acn007': ["Aqara", "Button E1", "WXKG20LM"],
+    'mi_spec': [
+        ['2.1', None, 'button: 1', None],  # single
+        ['2.2', None, 'button: 2', None],  # double
+        ['2.3', None, 'button: 16', None],  # long
         ['3.2', '3.2', 'battery', 'sensor'],
         [None, None, 'switch', 'binary_sensor'],
     ]
@@ -1106,18 +1269,41 @@ DEVICES_MIOT = [{
         ['7.1', None, 'button_2: 1', None],  # single
         ['7.2', None, 'button_2: 2', None],  # double
         ['7.3', None, 'button_2: 16', None],  # long
-        ['3.2', '3.2', 'battery', 'sensor'],
+        [None, None, 'switch', 'binary_sensor'],
+    ]
+}, {
+    # with neutral wire
+    'lumi.switch.acn040': ["Aqara", "Triple Wall Switch E1", "ZNQBKG31LM"],
+    'mi_spec': [
+        ['2.1', '2.1', 'channel 1', 'switch'],
+        ['3.1', '3.1', 'channel 2', 'switch'],
+        ['4.1', '4.1', 'channel 3', 'switch'],
+        ['9.1', None, 'button_1: 1', None],
+        ['9.2', None, 'button_both: 4', None],
+        ['10.1', None, 'button_2: 1', None],
+        ['10.2', None, 'button_both: 4', None],
+        ['11.1', None, 'button_3: 4', None],
+        ['11.2', None, 'button_both_23: 4', None],
+        ['12.1', None, 'button_both_12: 4', None],
+        ['13.1', None, 'button_both_13: 4', None],
+        ['14.1', None, 'button_both_23: 4', None],
         [None, None, 'switch', 'binary_sensor'],
     ]
 },{
     # door window sensor
     'lumi.magnet.agl02': ["Aqara", "Door Sensor T1", "MCCGQ12LM"],  # @Kris
-    'lumi.magnet.acn001': ["Aqara", "Door Sensor E1", "MCCGQ14LM"],
     'mi_spec': [
         ['2.1', 'status', 'contact', 'binary_sensor'],
         ['3.2', '3.2', 'voltage', None],
         ['5.1', None, 'elapsed_time', None],
         ['6.1', 'battery', 'battery', 'sensor'],
+    ]
+},{
+    # door window sensor
+    'lumi.magnet.acn001': ["Aqara", "Door Sensor E1", "MCCGQ14LM"],
+    'mi_spec': [
+        ['2.1', 'status', 'contact', 'binary_sensor'],
+        ['3.2', 'voltage', 'battery', 'sensor']
     ]
 }, {
     # motion sensor with illuminance
@@ -1150,17 +1336,20 @@ DEVICES_MIOT = [{
         ['5.1', 'battery', 'battery', 'sensor'],
         [None, None, 'action', 'binary_sensor']
     ]
-}, {
-    'lumi.airmonitor.acn01': ["Aqara", "Smart TVOC Air Quality Monitor", "VOCKQJK11LM"],
-    'mi_spec': [
-        ['3.1', '3.1', 'temperature', 'sensor'],
-        ['3.2', '3.2', 'humidity', 'sensor'],
-        ['3.3', '3.3', 'tvoc', 'sensor'],
-        ['4.1', '4.1', 'tvoc_level', 'air_quality'],
-        ['4.2', '4.2', 'battery', 'sensor'],
-    ]
+# latest firmwares remove the support on TVOC Monitor
+#}, {
+#    'lumi.airmonitor.acn01': ["Aqara", "Smart TVOC Air Quality Monitor", "VOCKQJK11LM"],
+#    'mi_spec': [
+#        ['3.1', '3.1', 'temperature', 'sensor'],
+#        ['3.2', '3.2', 'humidity', 'sensor'],
+#        ['3.3', '3.3', 'tvoc', 'sensor'],
+#        ['4.1', '4.1', 'tvoc_level', 'air_quality'],
+#        ['4.2', '4.2', 'battery', 'sensor'],
+#    ]
 }, {
     'lumi.curtain.acn002': ["Aqara", "Roller Shade E1", "ZNJLBL01LM"],
+    'lumi.curtain.acn003': ["Aqara", "Roller Shade E1", "ZNJLBL01LM"],
+    'lumi.curtain.agl001': ["Aqara", "Roller Shade E1", "ZNJLBL01LM"],
     'mi_spec': [
         ['1.4', '1.4', 'fw_ver', None],
         ['2.1', '2.1', 'fault', None],
@@ -1182,9 +1371,25 @@ DEVICES_MIOT = [{
 }, {
     # water leak sensor
     'lumi.flood.acn001': ["Aqara", "Water Leak Sensor E1", "SJCGQ13LM"],
-    'params': [
+    'mi_spec': [
         ['2.1', 'alarm', 'moisture', 'binary_sensor'],
         ['6.1', 'battery', 'battery', 'sensor'],
+    ]
+}, {
+    'lumi.airrtc.agl001': ["Aqara", "Smart Radiator Thermostat E1", ""],
+    'mi_spec': [
+        ['2.4', '2.4', 'mode', None],
+        ['2.5', '2.5', 'target_temperature', None],
+        ['2.1', '2.1', 'switch', 'switch'],
+        ['2.7', 'temperature', 'temperature', 'sensor'],
+    ]
+},{
+    # light with brightness and color temp
+    'lumi.light.acn003': ["Aqara", "L1-350 Ceiling Light", "ZNXDD01LM"],
+    'mi_spec': [
+        ['2.1', 'power_status', 'light', 'light'],
+        ['2.2', 'light_level', 'brightness', None],
+        ['2.3', 'colour_temperature', 'color_temp', None],
     ]
 }]
 
@@ -1403,7 +1608,7 @@ class Utils:
     def gateway_alarm_mode_supported(model: str) -> Optional[bool]:
         """ return the gateway alarm mode supported """
         #  basic_cli not support
-        if model not in ('lumi.camera.gwagl02', 'lumi.camera.gwpagl01'):
+        if model not in ('lumi.camera.gwagl02', 'lumi.camera.gwag03', 'lumi.camera.gwpagl01'):
             return True
         return False
 
@@ -1420,7 +1625,8 @@ class Utils:
         """ return the gateway is aiot only """
         if model in ('lumi.camera.gwagl02', 'lumi.gateway.iragl5',
                      'lumi.gateway.iragl7', 'lumi.gateway.iragl01',
-                     'lumi.gateway.sacn01'):
+                     'lumi.gateway.sacn01', 'lumi.camera.gwpagl01',
+                     'lumi.camera.agl001', 'lumi.camera.gwag03'):
             return True
         return False
 
@@ -1434,7 +1640,7 @@ class Utils:
     @staticmethod
     def get_info_store_path(model: str) -> Optional[str]:
         """ return the path of zigbee info """
-        if model.startswith('lumi.camera.'):
+        if model in ('lumi.camera.gwagl02', 'lumi.camera.gwag03'):
             return '/mnt/config'
         return '/data'
 

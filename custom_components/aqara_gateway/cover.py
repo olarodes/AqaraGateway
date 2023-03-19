@@ -6,8 +6,13 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_TILT_POSITION,
     CoverEntity
-    )
-from homeassistant.const import STATE_CLOSING, STATE_OPENING, STATE_UNKNOWN
+)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    STATE_CLOSING,
+    STATE_OPENING,
+    STATE_UNKNOWN
+)
 
 from . import GatewayGenericDevice
 from .core.gateway import Gateway
@@ -15,6 +20,7 @@ from .core.const import (
     ATTR_FW_VER,
     ATTR_LQI,
     ATTR_CHIP_TEMPERATURE,
+    BATTERY,
     CHIP_TEMPERATURE,
     DOMAIN,
     FW_VER,
@@ -35,6 +41,9 @@ RUN_STATE = 'run_state'
 
 CHARGING_STATUS_ = {0: "Not Charging", 1: "Charging", 2: "Stop Charging", 3: "Charging Failure"}
 MOTOR_STROKES = {0: "No stroke", 1: "The stroke has been set"}
+
+DEVICES_WITH_BATTERY = ['lumi.curtain.acn002', 'lumi.curtain.acn003', 'lumi.curtain.agl001']
+DEVICES_WITH_NO_TILT = ['lumi.curtain.vagl02', 'lumi.curtain.aq2']
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Xiaomi devices."""
@@ -68,8 +77,11 @@ class XiaomiGenericCover(GatewayGenericDevice, CoverEntity):
         self._motor_stroke = None
         self._charging_status = None
         self._working_time = None
+        self._model = device['model']
         if device['model'] == 'lumi.curtain.acn002':
             self._attr_current_cover_tilt_position = 0
+        if device['model'] in DEVICES_WITH_BATTERY:
+            self._battery = None
         super().__init__(gateway, device, atrr)
 
     @property
@@ -98,6 +110,9 @@ class XiaomiGenericCover(GatewayGenericDevice, CoverEntity):
     def update(self, data: dict = None):
         """ update state """
         for key, value in data.items():
+            if key == BATTERY:
+                if hasattr(self, "_battery"):
+                    self._battery = value
             if key == CHIP_TEMPERATURE:
                 self._chip_temperature = value
             if key == FW_VER or key == 'back_version':
@@ -114,20 +129,22 @@ class XiaomiGenericCover(GatewayGenericDevice, CoverEntity):
                 self._working_time = value
             if key == POSITION:
                 self._pos = value
-                if hasattr(self, "current_cover_tilt_position"):
+                if hasattr(self, "current_cover_tilt_position") and self._model not in DEVICES_WITH_NO_TILT:
                     self._attr_current_cover_tilt_position = value
             if key == RUN_STATE:
                 self._state = RUN_STATES.get(value, STATE_UNKNOWN)
+
+
 
         self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.gateway.send(self.device, {'motor': 0})
+        self.gateway.send(self.device, {'position': 0})
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.gateway.send(self.device, {'motor': 1})
+        self.gateway.send(self.device, {'position': 100})
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -149,6 +166,8 @@ class XiaomiGenericCover(GatewayGenericDevice, CoverEntity):
         self._attrs[ATTR_MOTOR_STROKE] = self._motor_stroke
         self._attrs[ATTR_CHARGING_STATUS] = self._charging_status
         self._attrs[ATTR_WORKING_TIME] = self._working_time
+        if hasattr(self, "_battery"):
+            self._attrs[ATTR_BATTERY_LEVEL] = self._battery
         return self._attrs
 
     def open_cover_tilt(self, **kwargs: Any) -> None:
